@@ -1,0 +1,55 @@
+{
+  "name": "@comfyorg/litegraph",
+  "version": "0.7.47",
+  "type": "module",
+  "description": "A graph node editor similar to PD or UDK Blueprints. It works in an HTML5 Canvas and allows to export graphs to be included in applications.",
+  "main": "./dist/litegraph.umd.js",
+  "module": "./dist/litegraph.es.js",
+  "types": "./dist/litegraph.d.ts",
+  "style": "./dist/css/litegraph.css",
+  "exports": {
+    ".": {
+      "import": "./dist/litegraph.es.js",
+      "require": "./dist/litegraph.umd.js",
+      "types": "./dist/litegraph.d.ts"
+    },
+    "./style.css": "./dist/css/litegraph.css"
+  },
+  "directories": {
+    "doc": "doc"
+  },
+  "private": false,
+  "scripts": {
+    "prepare": "npm run build",
+    "build": "tsc && vite build",
+    "dev": "vite",
+    "preview": "vite preview",
+    "test": "jest",
+    "deprecated-test:allVersions": "./utils/test.sh",
+    "deprecated-prettier": "npx prettier --write src/**/*.* css/**/*.*",
+    "deprecated-lint": "npx eslint src",
+    "deprecated-lint:fix": "npx eslint --fix src"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:Comfy-Org/litegraph.js.git"
+  },
+  "author": "comfyorg",
+  "license": "MIT",
+  "files": [
+    "dist"
+  ],
+  "bugs": {
+    "url": "https://github.com/Comfy-Org/litegraph.js/issues"
+  },
+  "homepage": "https://github.com/Comfy-Org/litegraph.js",
+  "devDependencies": {
+    "@types/jest": "^29.5.12",
+    "@types/node": "^22.1.0",
+    "jest-environment-jsdom": "^29.7.0",
+    "ts-jest": "^29.2.4",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.2.2",
+    "vite": "^5.3.4"
+  }
+}
