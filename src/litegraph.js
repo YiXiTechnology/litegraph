@@ -5180,7 +5180,8 @@ LGraphNode.prototype.executeAction = function(action)
 
         this.ds = new DragAndScale();
         this.zoom_modify_alpha = true; //otherwise it generates ugly patterns when scaling down too much
-
+        this.zoom_speed = 1.1 // in range (1.01, 2.5). Less than 1 will invert the zoom direction
+        
         this.title_text_font = "" + LiteGraph.NODE_TEXT_SIZE + "px Arial";
         this.inner_text_font =
             "normal " + LiteGraph.NODE_SUBTEXT_SIZE + "px Arial";
@@ -6942,9 +6943,9 @@ LGraphNode.prototype.executeAction = function(action)
         var scale = this.ds.scale;
 
         if (delta > 0) {
-            scale *= 1.1;
+            scale *= this.zoom_speed;
         } else if (delta < 0) {
-            scale *= 1 / 1.1;
+            scale *= 1 / this.zoom_speed;
         }
 
         //this.setZoom( scale, [ e.clientX, e.clientY ] );
@@ -11478,6 +11479,15 @@ LGraphNode.prototype.executeAction = function(action)
 
         setTimeout(function() {
             input.focus();
+            function handleOutsideClick(e) {
+                if (e.target === canvas) {
+                    dialog.close();
+                    canvas.parentNode.removeEventListener("click", handleOutsideClick);
+                    canvas.parentNode.removeEventListener("touchend", handleOutsideClick);
+                }
+            }
+            canvas.parentNode.addEventListener("click", handleOutsideClick);
+            canvas.parentNode.addEventListener("touchend", handleOutsideClick);
         }, 10);
 
         return dialog;
