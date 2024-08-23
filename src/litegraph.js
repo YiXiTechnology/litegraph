@@ -11488,7 +11488,7 @@ LGraphNode.prototype.executeAction = function(action)
             }
             canvas.parentNode.addEventListener("click", handleOutsideClick);
             canvas.parentNode.addEventListener("touchend", handleOutsideClick);
-        }, 1000);
+        }, 500);
 
         return dialog;
     };
