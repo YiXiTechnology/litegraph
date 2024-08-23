@@ -11479,16 +11479,16 @@ LGraphNode.prototype.executeAction = function(action)
 
         setTimeout(function() {
             input.focus();
-            // function handleOutsideClick(e) {
-            //     if (e.target === canvas) {
-            //         dialog.close();
-            //         canvas.parentNode.removeEventListener("click", handleOutsideClick);
-            //         canvas.parentNode.removeEventListener("touchend", handleOutsideClick);
-            //     }
-            // }
-            // canvas.parentNode.addEventListener("click", handleOutsideClick);
-            // canvas.parentNode.addEventListener("touchend", handleOutsideClick);
-        }, 10);
+            function handleOutsideClick(e) {
+                if (e.target === canvas) {
+                    dialog.close();
+                    canvas.parentNode.removeEventListener("click", handleOutsideClick);
+                    canvas.parentNode.removeEventListener("touchend", handleOutsideClick);
+                }
+            }
+            canvas.parentNode.addEventListener("click", handleOutsideClick);
+            canvas.parentNode.addEventListener("touchend", handleOutsideClick);
+        }, 1000);
 
         return dialog;
     };
