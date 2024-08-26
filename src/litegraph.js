@@ -6884,17 +6884,17 @@ LGraphNode.prototype.executeAction = function(action)
             if(Math.abs(e.clientX - this.dragging_canvas_mouse[0]) < 3 && Math.abs(e.clientY - this.dragging_canvas_mouse[1]) < 3) {
                 var node = this.graph.getNodeOnPos( e.canvasX, e.canvasY, this.visible_nodes, 5 );
                 if (!node) {
-                    // this.processContextMenu(node, e);
-                    this.canvas.dispatchEvent(new CustomEvent(
-                        "litegraph:canvas",
-                        {
-                            bubbles: true,
-                            detail: {
-                                subType: "empty-right-click",
-                                originalEvent: e,
-                            }
-                        },
-                    ));
+                    this.processContextMenu(node, e);
+                    // this.canvas.dispatchEvent(new CustomEvent(
+                    //     "litegraph:canvas",
+                    //     {
+                    //         bubbles: true,
+                    //         detail: {
+                    //             subType: "empty-right-click",
+                    //             originalEvent: e,
+                    //         }
+                    //     },
+                    // ));
                 }
             }
             this.dirty_canvas = true;
