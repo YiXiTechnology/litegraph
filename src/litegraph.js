@@ -13444,21 +13444,21 @@ LGraphNode.prototype.executeAction = function(action)
                     new LiteGraph.ContextMenu(menu_info, options);
                 } else {
                     // yyh
-                    if(!menu_info) {
-                        return;
-                    }
-                    LGraphCanvas.onMenuAdd(null, null, event, null, null);
+                    // if(!menu_info) {
+                    //     return;
+                    // }
+                    // LGraphCanvas.onMenuAdd(null, null, event, null, null);
                 }
             }
         }
         
         // yyh
-        // //show menu
-        // if (!menu_info) {
-        //     return;
-        // }
+        //show menu
+        if (!menu_info) {
+            return;
+        }
 
-        // var menu = new LiteGraph.ContextMenu(menu_info, options, ref_window);
+        var menu = new LiteGraph.ContextMenu(menu_info, options, ref_window);
 
         function inner_option_clicked(v, options, e) {
             if (!v) {
