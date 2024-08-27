@@ -10577,9 +10577,9 @@ LGraphNode.prototype.executeAction = function(action)
             var categories  = LiteGraph.getNodeTypesCategories(canvas.filter || graph.filter).filter(function(category){return category.startsWith(base_category)});
             var entries = [];
             // yyh
-            if(!base_category) {
-                entries.push({ value: 'Group', content: '组', has_submenu: false, callback : LGraphCanvas.onGroupAdd});
-            }
+            // if(!base_category) {
+            //     entries.push({ value: 'Group', content: '组', has_submenu: false, callback : LGraphCanvas.onGroupAdd});
+            // }
     
             categories.map(function(category){
     
