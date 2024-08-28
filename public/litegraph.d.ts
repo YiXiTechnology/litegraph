@@ -994,6 +994,30 @@ export declare class LGraphNode {
     ): void;
     onKey?(event: KeyboardEvent, pos: Vector2, graphCanvas: LGraphCanvas): void;
 
+    onDblClick?(
+        event: MouseEvent,
+        pos: Vector2,
+        graphCanvas: LGraphCanvas
+    ): void;
+
+    onNodeTitleDblClick?(
+        event: MouseEvent,
+        pos: Vector2,
+        graphCanvas: LGraphCanvas
+    ): void;
+
+    onInputDblClick?(
+        slot: number,
+        event: MouseEvent,
+        graphCanvas: LGraphCanvas
+    ): void;
+
+    onOutputDblClick?(
+        slot: number,
+        event: MouseEvent,
+        graphCanvas: LGraphCanvas
+    ): void;
+
     /** Called by `LGraphCanvas.selectNodes` */
     onSelected?(): void;
     /** Called by `LGraphCanvas.deselectNode` */
@@ -1316,6 +1340,7 @@ export declare class LGraphCanvas {
     visible_links: LLink[];
     visible_nodes: LGraphNode[];
     zoom_modify_alpha: boolean;
+    zoom_speed: number;
     //mouse in canvas coordinates, where 0,0 is the top-left corner of the blue rectangle
     mouse: Vector2;
     //mouse in graph coordinates, where 0,0 is the top-left corner of the blue rectangle

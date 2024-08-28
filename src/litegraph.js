@@ -5181,7 +5181,7 @@ LGraphNode.prototype.executeAction = function(action)
         this.ds = new DragAndScale();
         this.zoom_modify_alpha = true; //otherwise it generates ugly patterns when scaling down too much
         this.zoom_speed = 1.1 // in range (1.01, 2.5). Less than 1 will invert the zoom direction
-        
+
         this.title_text_font = "" + LiteGraph.NODE_TEXT_SIZE + "px Arial";
         this.inner_text_font =
             "normal " + LiteGraph.NODE_SUBTEXT_SIZE + "px Arial";
@@ -5960,7 +5960,7 @@ LGraphNode.prototype.executeAction = function(action)
 
                                     if (is_double_click) {
                                         if (node.onOutputDblClick) {
-                                            node.onOutputDblClick(i, e);
+                                            node.onOutputDblClick(i, e, this);
                                         }
                                     } else {
                                         if (node.onOutputClick) {
@@ -5991,7 +5991,7 @@ LGraphNode.prototype.executeAction = function(action)
                                 ) {
                                     if (is_double_click) {
                                         if (node.onInputDblClick) {
-                                            node.onInputDblClick(i, e);
+                                            node.onInputDblClick(i, e, this);
                                         }
                                     } else {
                                         if (node.onInputClick) {
@@ -6076,6 +6076,14 @@ LGraphNode.prototype.executeAction = function(action)
 
                     //double clicking
                     if (this.allow_interaction && is_double_click && this.selected_nodes[node.id]) {
+                        //check if it's a double click on the title bar
+                        // Note: pos[1] is the y-coordinate of the node's body
+                        // If clicking on node header (title), pos[1] is negative
+                        if (pos[1] < 0) {
+                            if (node.onNodeTitleDblClick) {
+                                node.onNodeTitleDblClick(e, pos, this);
+                            }
+                        }
                         //double click node
                         if (node.onDblClick) {
                             node.onDblClick( e, pos, this );
