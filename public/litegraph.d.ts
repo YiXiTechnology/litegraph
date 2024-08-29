@@ -485,7 +485,7 @@ export declare class LGraph {
      * Adds a new node instance to this graph
      * @param node the instance of the node
      */
-    add(node: LGraphNode, skip_compute_order?: boolean): void;
+    add(node: LGraphNode | LGraphGroup, skip_compute_order?: boolean): void;
     /**
      * Called when a new node is added
      * @param node the instance of the node
