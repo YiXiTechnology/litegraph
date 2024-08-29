@@ -1128,6 +1128,7 @@ export declare class LGraphGroup {
     recomputeInsideNodes(): void;
     isPointInside: LGraphNode["isPointInside"];
     setDirtyCanvas: LGraphNode["setDirtyCanvas"];
+    addNodes(nodes: LGraphNode[], padding?: number): void;
 }
 
 export declare class DragAndScale {
