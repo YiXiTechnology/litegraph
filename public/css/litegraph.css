@@ -18,7 +18,7 @@
     position: fixed;
     top: 100px;
     left: 100px;
-    min-width: 200px;
+    min-width: 200px; /* yyh */
     color: #aaf;
     padding: 0;
     box-shadow: 0 0 10px black !important;
@@ -37,8 +37,8 @@
 }
 
 .litegraph.litecontextmenu .litemenu-entry {
-    margin: 4px;
-    padding: 5px;
+    margin: 4px; /* yyh */
+    padding: 5px; /* yyh */
 }
 
 .litegraph.litecontextmenu .litemenu-entry.submenu {
@@ -87,7 +87,7 @@
 
 .litegraph .litemenu-entry,
 .litemenu-title {
-    font-size: 14px;
+    font-size: 14px; /* yyh */
     color: #aaa;
     padding: 0 0 0 4px;
     margin: 2px;
