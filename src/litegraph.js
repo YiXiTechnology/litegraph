@@ -2348,8 +2348,8 @@ const globalExport = {};
             this.title = title || "Unnamed";
             this.size = [LiteGraph.NODE_WIDTH, 60];
             this.graph = null;
-
-            this._pos = new Float32Array(10, 10);
+            // Initialize _pos with a Float32Array of length 2, default value [10, 10]
+            this._pos = new Float32Array([10, 10]);
 
             Object.defineProperty(this, "pos", {
                 set: function (v) {
@@ -4844,6 +4844,10 @@ const globalExport = {};
             });
         }
 
+        get titleHeight() {
+            return this.font_size * 1.4;
+        }
+
         configure(o) {
             this.title = o.title;
             this._bounding.set(o.bounding);
@@ -4925,16 +4929,14 @@ const globalExport = {};
                 };
             }, { left: Infinity, top: Infinity, right: -Infinity, bottom: -Infinity });
 
-            const groupTitleHeight = Math.round(this.font_size * 1.4);
-
             this.pos = [
                 bounds.left - padding,
-                bounds.top - padding - groupTitleHeight
+                bounds.top - padding - this.titleHeight
             ];
 
             this.size = [
                 bounds.right - bounds.left + padding * 2,
-                bounds.bottom - bounds.top + padding * 2 + groupTitleHeight
+                bounds.bottom - bounds.top + padding * 2 + this.titleHeight
             ];
         }
     }
@@ -7063,6 +7065,20 @@ const globalExport = {};
                         }
 
                         if (is_double_click && !this.read_only) {
+                            if (is_double_click) {
+                                this.canvas.dispatchEvent(new CustomEvent(
+                                    "litegraph:canvas",
+                                    {
+                                        bubbles: true,
+                                        detail: {
+                                            subType: "group-double-click",
+                                            originalEvent: e,
+                                            group: this.selected_group,
+                                        }
+                                    }
+                                ));
+                            }
+                        } else if (is_double_click && !this.read_only) {
                             if (this.allow_searchbox) {
                                 this.showSearchBox(e);
                                 e.preventDefault();

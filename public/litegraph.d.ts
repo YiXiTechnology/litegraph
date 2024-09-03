@@ -166,12 +166,19 @@ export type LinkReleaseContextExtended = {
     links: ConnectingLink[];
 };
 
-export type LiteGraphCanvasEventType = "empty-release" | "empty-double-click";
+export type LiteGraphCanvasEventType = "empty-release" | "empty-double-click" | "group-double-click";
 
 export type LiteGraphCanvasEvent = CustomEvent<{
     subType: string;
-    originalEvent: Event,
+    originalEvent: Event;
     linkReleaseContext?: LinkReleaseContextExtended;
+    group?: LGraphGroup;
+}>;
+
+export type LiteGraphCanvasGroupEvent = CustomEvent<{
+    subType: "group-double-click";
+    originalEvent: MouseEvent;
+    group: LGraphGroup;
 }>;
 
 export const LiteGraph: {
