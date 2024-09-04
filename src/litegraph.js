@@ -148,6 +148,9 @@ const globalExport = {};
         // use this if you must have node IDs that are unique across all graphs and subgraphs.
         use_uuids: false,
 
+        // Whether to highlight the bounding box of selected groups
+        highlight_selected_group: false,
+
         /**
          * Register a node class so it can be listed when the user wants to create a new one
          * @method registerNodeType
@@ -4848,6 +4851,10 @@ const globalExport = {};
             return this.font_size * 1.4;
         }
 
+        get selected() {
+            return !!this.graph?.list_of_graphcanvas?.some(c => c.selected_group === this);
+        }
+
         configure(o) {
             this.title = o.title;
             this._bounding.set(o.bounding);
@@ -4870,6 +4877,45 @@ const globalExport = {};
                 color: this.color,
                 font_size: this.font_size
             };
+        }
+
+        /**
+         * Draws the group on the canvas
+         * @param {LGraphCanvas} graphCanvas
+         * @param {CanvasRenderingContext2D} ctx
+         */
+        draw(graphCanvas, ctx) {
+            ctx.fillStyle = this.color;
+            ctx.strokeStyle = this.color;
+            const [x, y] = this._pos;
+            const [width, height] = this._size;
+            ctx.globalAlpha = 0.25 * graphCanvas.editor_alpha;
+            ctx.beginPath();
+            ctx.rect(x + 0.5, y + 0.5, width, height);
+            ctx.fill();
+            ctx.globalAlpha = graphCanvas.editor_alpha;
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.moveTo(x + width, y + height);
+            ctx.lineTo(x + width - 10, y + height);
+            ctx.lineTo(x + width, y + height - 10);
+            ctx.fill();
+
+            const font_size = this.font_size || LiteGraph.DEFAULT_GROUP_FONT_SIZE;
+            ctx.font = font_size + "px Arial";
+            ctx.textAlign = "left";
+            ctx.fillText(this.title, x + 4, y + font_size);
+
+            if (LiteGraph.highlight_selected_group && this.selected) {
+                graphCanvas.drawSelectionBounding(ctx, this._bounding, {
+                    shape: LiteGraph.BOX_SHAPE,
+                    title_height: this.titleHeight,
+                    title_mode: LiteGraph.NORMAL_TITLE,
+                    fgcolor: this.color,
+                    padding: 4
+                });
+            }
         }
 
         move(deltax, deltay, ignore_nodes) {
@@ -7059,12 +7105,7 @@ const globalExport = {};
                             } else {
                                 this.selected_group.recomputeInsideNodes();
                             }
-                        } else {
-                            skip_action = true; // yyh
-                            this.dragging_rectangle_ready = true; // yyh
-                        }
 
-                        if (is_double_click && !this.read_only) {
                             if (is_double_click) {
                                 this.canvas.dispatchEvent(new CustomEvent(
                                     "litegraph:canvas",
@@ -7078,7 +7119,9 @@ const globalExport = {};
                                     }
                                 ));
                             }
-                        } else if (is_double_click && !this.read_only) {
+
+
+                        } else if(is_double_click && !this.read_only) {
                             if (this.allow_searchbox) {
                                 this.showSearchBox(e);
                                 e.preventDefault();
@@ -7094,6 +7137,9 @@ const globalExport = {};
                                     }
                                 }
                             ));
+                        } else {
+                            skip_action = true; // yyh
+                            this.dragging_rectangle_ready = true; // yyh
                         }
 
                         clicking_canvas_bg = true;
@@ -7683,13 +7729,13 @@ const globalExport = {};
                         };
                         this.canvas.dispatchEvent(new CustomEvent(
                             "litegraph:canvas", {
-                            bubbles: true,
-                            detail: {
-                                subType: "empty-release",
-                                originalEvent: e,
-                                linkReleaseContext: linkReleaseContextExtended,
-                            },
-                        }
+                                bubbles: true,
+                                detail: {
+                                    subType: "empty-release",
+                                    originalEvent: e,
+                                    linkReleaseContext: linkReleaseContextExtended,
+                                },
+                            }
                         ));
                         // add menu when releasing link in empty space
                         if (LiteGraph.release_link_on_empty_shows_menu) {
@@ -10033,56 +10079,90 @@ const globalExport = {};
                     node.onBounding(area);
                 }
 
-                if (title_mode == LiteGraph.TRANSPARENT_TITLE) {
-                    area[1] -= title_height;
-                    area[3] += title_height;
-                }
-                ctx.lineWidth = 1;
-                ctx.globalAlpha = 0.8;
-                ctx.beginPath();
-                if (shape == LiteGraph.BOX_SHAPE) {
-                    ctx.rect(
-                        -6 + area[0],
-                        -6 + area[1],
-                        12 + area[2],
-                        12 + area[3]
-                    );
-                } else if (shape == LiteGraph.ROUND_SHAPE ||
-                    (shape == LiteGraph.CARD_SHAPE && node.flags.collapsed)) {
-                    ctx.roundRect(
-                        -6 + area[0],
-                        -6 + area[1],
-                        12 + area[2],
-                        12 + area[3],
-                        [this.round_radius * 2]
-                    );
-                } else if (shape == LiteGraph.CARD_SHAPE) {
-                    ctx.roundRect(
-                        -6 + area[0],
-                        -6 + area[1],
-                        12 + area[2],
-                        12 + area[3],
-                        [this.round_radius * 2, 2, this.round_radius * 2, 2]
-                    );
-                } else if (shape == LiteGraph.CIRCLE_SHAPE) {
-                    ctx.arc(
-                        size[0] * 0.5,
-                        size[1] * 0.5,
-                        size[0] * 0.5 + 6,
-                        0,
-                        Math.PI * 2
-                    );
-                }
-                ctx.strokeStyle = LiteGraph.NODE_BOX_OUTLINE_COLOR;
-                ctx.stroke();
-                ctx.strokeStyle = fgcolor;
-                ctx.globalAlpha = 1;
+                this.drawSelectionBounding(
+                    ctx,
+                    area,
+                    {
+                        shape,
+                        title_height,
+                        title_mode,
+                        fgcolor,
+                    }
+                );
             }
 
             // these counter helps in conditioning drawing based on if the node has been executed or an action occurred
             if (node.execute_triggered > 0) node.execute_triggered--;
             if (node.action_triggered > 0) node.action_triggered--;
         }
+
+        /**
+         * Draws the selection bounding of an area.
+         * @param {CanvasRenderingContext2D} ctx
+         * @param {Vector4} area
+         * @param {{
+         *   shape: LiteGraph.Shape,
+         *   title_height: number,
+         *   title_mode: LiteGraph.TitleMode,
+         *   fgcolor: string,
+         *   padding: number,
+         * }} options
+         */
+        drawSelectionBounding(
+            ctx,
+            area,
+            {
+                shape = LiteGraph.BOX_SHAPE,
+                title_height = LiteGraph.NODE_TITLE_HEIGHT,
+                title_mode = LiteGraph.NORMAL_TITLE,
+                fgcolor = LiteGraph.NODE_BOX_OUTLINE_COLOR,
+                padding = 6
+            } = {}
+        ) {
+            // Adjust area if title is transparent
+            if (title_mode === LiteGraph.TRANSPARENT_TITLE) {
+                area[1] -= title_height;
+                area[3] += title_height;
+            }
+
+            // Set up context
+            ctx.lineWidth = 1;
+            ctx.globalAlpha = 0.8;
+            ctx.beginPath();
+
+            // Draw shape based on type
+            const [x, y, width, height] = area;
+            switch (shape) {
+                case LiteGraph.BOX_SHAPE: {
+                    ctx.rect(x - padding, y - padding, width + 2 * padding, height + 2 * padding);
+                    break;
+                }
+                case LiteGraph.ROUND_SHAPE:
+                case LiteGraph.CARD_SHAPE: {
+                    const radius = this.round_radius * 2;
+                    const isCollapsed = shape === LiteGraph.CARD_SHAPE && node.flags.collapsed;
+                    const cornerRadii = isCollapsed || shape === LiteGraph.ROUND_SHAPE ? [radius] : [radius, 2, radius, 2];
+                    ctx.roundRect(x - padding, y - padding, width + 2 * padding, height + 2 * padding, cornerRadii);
+                    break;
+                }
+                case LiteGraph.CIRCLE_SHAPE: {
+                    const centerX = x + width / 2;
+                    const centerY = y + height / 2;
+                    const radius = Math.max(width, height) / 2 + padding;
+                    ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+                    break;
+                }
+            }
+
+            // Stroke the shape
+            ctx.strokeStyle = LiteGraph.NODE_BOX_OUTLINE_COLOR;
+            ctx.stroke();
+
+            // Reset context
+            ctx.strokeStyle = fgcolor;
+            ctx.globalAlpha = 1;
+        }
+
         drawConnections(ctx) {
             var now = LiteGraph.getTime();
             var visible_area = this.visible_area;
@@ -11028,9 +11108,9 @@ const globalExport = {};
             return null;
         }
         /**
-             * draws every group area in the background
-             * @method drawGroups
-             **/
+         * draws every group area in the background
+         * @method drawGroups
+         **/
         drawGroups(canvas, ctx) {
             if (!this.graph) {
                 return;
@@ -11048,27 +11128,7 @@ const globalExport = {};
                     continue;
                 } //out of the visible area
 
-                ctx.fillStyle = group.color || "#335";
-                ctx.strokeStyle = group.color || "#335";
-                var pos = group._pos;
-                var size = group._size;
-                ctx.globalAlpha = 0.25 * this.editor_alpha;
-                ctx.beginPath();
-                ctx.rect(pos[0] + 0.5, pos[1] + 0.5, size[0], size[1]);
-                ctx.fill();
-                ctx.globalAlpha = this.editor_alpha;
-                ctx.stroke();
-
-                ctx.beginPath();
-                ctx.moveTo(pos[0] + size[0], pos[1] + size[1]);
-                ctx.lineTo(pos[0] + size[0] - 10, pos[1] + size[1]);
-                ctx.lineTo(pos[0] + size[0], pos[1] + size[1] - 10);
-                ctx.fill();
-
-                var font_size = group.font_size || LiteGraph.DEFAULT_GROUP_FONT_SIZE;
-                ctx.font = font_size + "px Arial";
-                ctx.textAlign = "left";
-                ctx.fillText(group.title, pos[0] + 4, pos[1] + font_size);
+                group.draw(this, ctx);
             }
 
             ctx.restore();
@@ -11370,7 +11430,9 @@ const globalExport = {};
                 ,
                 slotTo: null // output
                 ,
-                e: null
+                e: null,
+                allow_searchbox: this.allow_searchbox,
+                showSearchBox: this.showSearchBox,
             },
                 optPass
             );
@@ -11381,7 +11443,7 @@ const globalExport = {};
 
             if (!isFrom && !isTo) {
                 console.warn("No data passed to showConnectionMenu");
-                return false;
+                return;
             }
 
             var nodeX = isFrom ? opts.nodeFrom : opts.nodeTo;
@@ -11405,12 +11467,12 @@ const globalExport = {};
                     // bad ?
                     //iSlotConn = 0;
                     console.warn("Cant get slot information " + slotX);
-                    return false;
+                    return;
             }
 
             var options = ["Add Node", null];
 
-            if (that.allow_searchbox) {
+            if (opts.allow_searchbox) {
                 options.push("Search");
                 options.push(null);
             }
@@ -11450,9 +11512,9 @@ const globalExport = {};
                         break;
                     case "Search":
                         if (isFrom) {
-                            that.showSearchBox(e, { node_from: opts.nodeFrom, slot_from: slotX, type_filter_in: fromSlotType });
+                            opts.showSearchBox(e, { node_from: opts.nodeFrom, slot_from: slotX, type_filter_in: fromSlotType });
                         } else {
-                            that.showSearchBox(e, { node_to: opts.nodeTo, slot_from: slotX, type_filter_out: fromSlotType });
+                            opts.showSearchBox(e, { node_to: opts.nodeTo, slot_from: slotX, type_filter_out: fromSlotType });
                         }
                         break;
                     default:
@@ -11470,8 +11532,6 @@ const globalExport = {};
                         break;
                 }
             }
-
-            return false;
         }
         // refactor: there are different dialogs, some uses createDialog some dont
         prompt(title, value, callback, event, multiline) {
