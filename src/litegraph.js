@@ -7119,9 +7119,8 @@ const globalExport = {};
                                     }
                                 ));
                             }
-
-
-                        } else if(is_double_click && !this.read_only) {
+                        } else if (is_double_click && !this.read_only) {
+                            // Double click within group should not trigger the searchbox.
                             if (this.allow_searchbox) {
                                 this.showSearchBox(e);
                                 e.preventDefault();
