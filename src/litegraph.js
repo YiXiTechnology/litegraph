@@ -1636,17 +1636,12 @@ const globalExport = {};
              * @method getGroupOnPos
              * @param {number} x the x coordinate in canvas space
              * @param {number} y the y coordinate in canvas space
-             * @return {LGraphGroup} the group or null
+             * @return {LGraphGroup | null} the group or null
              */
-        getGroupOnPos(x, y) {
-            for (var i = this._groups.length - 1; i >= 0; i--) {
-                var g = this._groups[i];
-                if (g.isPointInside(x, y, 2, true)) {
-                    return g;
-                }
-            }
-            return null;
+        getGroupOnPos(x, y, {margin = 2} = {}) {
+            return this._groups.reverse().find(g => g.isPointInside(x, y, margin, /* skip_title */true));
         }
+
         /**
              * Checks that the node type matches the node type registered, used when replacing a nodetype by a newer version during execution
              * this replaces the ones using the old version with the new version
@@ -2472,6 +2467,11 @@ const globalExport = {};
                         }
                     }
                 }
+            }
+
+            // Sync the state of this.resizable.
+            if (this.pinned) {
+                this.pin(true);
             }
 
             if (this.onConfigure) {
@@ -4760,13 +4760,21 @@ const globalExport = {};
             }
         }
 
+        get collapsed() {
+            return !!this.flags.collapsed;
+        }
+
+        get collapsible() {
+            return !this.pinned && (this.constructor.collapsable !== false);
+        }
+
         /**
              * Collapse the node to make it smaller on the canvas
              * @method collapse
              **/
         collapse(force) {
             this.graph._version++;
-            if (this.constructor.collapsable === false && !force) {
+            if (!this.collapsible && !force) {
                 return;
             }
             if (!this.flags.collapsed) {
@@ -4777,8 +4785,12 @@ const globalExport = {};
             this.setDirtyCanvas(true, true);
         }
 
+        get pinned() {
+            return !!this.flags.pinned;
+        }
+
         /**
-             * Forces the node to do not move or realign on Z
+             * Forces the node to do not move or realign on Z or resize
              * @method pin
              **/
         pin(v) {
@@ -4787,6 +4799,12 @@ const globalExport = {};
                 this.flags.pinned = !this.flags.pinned;
             } else {
                 this.flags.pinned = v;
+            }
+            this.resizable = !this.pinned;
+            // Delete the flag if unpinned, so that we don't get unnecessary
+            // flags.pinned = false in serialized object.
+            if (!this.pinned) {
+                delete this.flags.pinned;
             }
         }
 
@@ -4817,6 +4835,7 @@ const globalExport = {};
             this._size = this._bounding.subarray(2, 4);
             this._nodes = [];
             this.graph = null;
+            this.flags = {};
 
             Object.defineProperty(this, "pos", {
                 set: function (v) {
@@ -4855,10 +4874,23 @@ const globalExport = {};
             return !!this.graph?.list_of_graphcanvas?.some(c => c.selected_group === this);
         }
 
+        get pinned() {
+            return !!this.flags.pinned;
+        }
+
+        pin() {
+            this.flags.pinned = true;
+        }
+
+        unpin() {
+            delete this.flags.pinned;
+        }
+
         configure(o) {
             this.title = o.title;
             this._bounding.set(o.bounding);
             this.color = o.color;
+            this.flags = o.flags || this.flags;
             if (o.font_size) {
                 this.font_size = o.font_size;
             }
@@ -4875,7 +4907,8 @@ const globalExport = {};
                     Math.round(b[3])
                 ],
                 color: this.color,
-                font_size: this.font_size
+                font_size: this.font_size,
+                flags: this.flags,
             };
         }
 
@@ -4885,6 +4918,8 @@ const globalExport = {};
          * @param {CanvasRenderingContext2D} ctx
          */
         draw(graphCanvas, ctx) {
+            const padding = 4;
+
             ctx.fillStyle = this.color;
             ctx.strokeStyle = this.color;
             const [x, y] = this._pos;
@@ -4905,7 +4940,7 @@ const globalExport = {};
             const font_size = this.font_size || LiteGraph.DEFAULT_GROUP_FONT_SIZE;
             ctx.font = font_size + "px Arial";
             ctx.textAlign = "left";
-            ctx.fillText(this.title, x + 4, y + font_size);
+            ctx.fillText(this.title + (this.pinned ? "📌" : ""), x + padding, y + font_size);
 
             if (LiteGraph.highlight_selected_group && this.selected) {
                 graphCanvas.drawSelectionBounding(ctx, this._bounding, {
@@ -4913,12 +4948,23 @@ const globalExport = {};
                     title_height: this.titleHeight,
                     title_mode: LiteGraph.NORMAL_TITLE,
                     fgcolor: this.color,
-                    padding: 4
+                    padding,
                 });
             }
         }
 
+        resize(width, height) {
+            if (this.pinned) {
+                return;
+            }
+            this._size[0] = width;
+            this._size[1] = height;
+        }
+
         move(deltax, deltay, ignore_nodes) {
+            if (this.pinned) {
+                return;
+            }
             this._pos[0] += deltax;
             this._pos[1] += deltay;
             if (ignore_nodes) {
@@ -4983,6 +5029,33 @@ const globalExport = {};
             this.size = [
                 bounds.right - bounds.left + padding * 2,
                 bounds.bottom - bounds.top + padding * 2 + this.titleHeight
+            ];
+        }
+
+        getMenuOptions() {
+            return [
+                {
+                    content: this.pinned ? "Unpin" : "Pin",
+                    callback: () => {
+                        this.pinned ? this.unpin() : this.pin();
+                        this.setDirtyCanvas(false, true);
+                    },
+                },
+				null,
+                { content: "Title", callback: LGraphCanvas.onShowPropertyEditor },
+                {
+                    content: "Color",
+                    has_submenu: true,
+                    callback: LGraphCanvas.onMenuNodeColors
+                },
+                {
+                    content: "Font size",
+                    property: "font_size",
+                    type: "Number",
+                    callback: LGraphCanvas.onShowPropertyEditor
+                },
+                null,
+                { content: "Remove", callback: LGraphCanvas.onMenuNodeRemove }
             ];
         }
     }
@@ -7001,7 +7074,7 @@ const globalExport = {};
                     //it wasn't clicked on the links boxes
                     if (!skip_action) {
                         var block_drag_node = false;
-                        if (node && node.flags && node.flags.pinned) {
+                        if (node?.pinned) {
                             block_drag_node = true;
                         }
                         var pos = [e.canvasX - node.pos[0], e.canvasY - node.pos[1]];
@@ -7354,10 +7427,10 @@ const globalExport = {};
             else if (this.selected_group && !this.read_only) {
                 //moving/resizing a group
                 if (this.selected_group_resizing) {
-                    this.selected_group.size = [
+                    this.selected_group.resize(
                         e.canvasX - this.selected_group.pos[0],
                         e.canvasY - this.selected_group.pos[1]
-                    ];
+                    );
                 } else {
                     var deltax = delta[0] / this.ds.scale;
                     var deltay = delta[1] / this.ds.scale;
@@ -8716,7 +8789,8 @@ const globalExport = {};
             if (this.bgcanvas == this.canvas) {
                 this.drawBackCanvas();
             } else {
-                ctx.drawImage(this.bgcanvas, 0, 0);
+                let scale = window.devicePixelRatio;
+                ctx.drawImage(this.bgcanvas, 0, 0, this.bgcanvas.width / scale, this.bgcanvas.height / scale);
             }
 
             //rendering
@@ -9222,8 +9296,9 @@ const globalExport = {};
 
             //reset in case of error
             if (!this.viewport) {
+                let scale = window.devicePixelRatio;
                 ctx.restore();
-                ctx.setTransform(1, 0, 0, 1, 0, 0);
+                ctx.setTransform(scale, 0, 0, scale, 0, 0);
             }
             this.visible_links.length = 0;
 
@@ -10015,7 +10090,7 @@ const globalExport = {};
                 }
                 if (!low_quality) {
                     ctx.font = this.title_text_font;
-                    var title = String(node.getTitle());
+                    var title = String(node.getTitle()) + (node.pinned ? "📌" : "");
                     if (title) {
                         if (selected) {
                             ctx.fillStyle = LiteGraph.NODE_SELECTED_TITLE_COLOR;
@@ -13108,13 +13183,15 @@ const globalExport = {};
                         content: "Resize", callback: LGraphCanvas.onMenuResizeNode
                     });
                 }
+                if (node.collapsible) {
+                    options.push({
+                        content: node.collapsed ? "Expand" : "Collapse",
+                        callback: LGraphCanvas.onMenuNodeCollapse
+                    });
+                }
                 options.push(
                     {
-                        content: "Collapse",
-                        callback: LGraphCanvas.onMenuNodeCollapse
-                    },
-                    {
-                        content: node.flags?.pinned ? "Unpin" : "Pin",
+                        content: node.pinned ? "Unpin" : "Pin",
                         callback: LGraphCanvas.onMenuNodePin
                     },
                     {
@@ -13187,24 +13264,8 @@ const globalExport = {};
             return options;
         }
         getGroupMenuOptions(node) {
-            var o = [
-                { content: "Title", callback: LGraphCanvas.onShowPropertyEditor },
-                {
-                    content: "Color",
-                    has_submenu: true,
-                    callback: LGraphCanvas.onMenuNodeColors
-                },
-                {
-                    content: "Font size",
-                    property: "font_size",
-                    type: "Number",
-                    callback: LGraphCanvas.onShowPropertyEditor
-                },
-                null,
-                { content: "Remove", callback: LGraphCanvas.onMenuNodeRemove }
-            ];
-
-            return o;
+            console.warn("LGraphCanvas.getGroupMenuOptions is deprecated, use LGraphGroup.getMenuOptions instead");
+            return node.getMenuOptions();
         }
         processContextMenu(node, event) {
             var that = this;

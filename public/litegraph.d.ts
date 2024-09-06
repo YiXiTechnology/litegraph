@@ -508,7 +508,7 @@ export declare class LGraph {
     /** Removes a node from the graph */
     remove(node: LGraphNode): void;
     /** Returns a node by its id. */
-    getNodeById(id: number): LGraphNode | undefined;
+    getNodeById(id: number | string): LGraphNode | undefined;
     /**
      * Returns a list of nodes that matches a class
      * @param classObject the class itself (not an string)
@@ -964,8 +964,13 @@ export declare class LGraphNode {
     loadImage(url: string): void;
     /** Allows to get onMouseMove and onMouseUp events even if the mouse is out of focus */
     captureInput(v: any): void;
+
+    get collapsed(): boolean;
+    get collapsible(): boolean;
     /** Collapse the node to make it smaller on the canvas */
     collapse(force: boolean): void;
+
+    get pinned(): boolean;
     /** Forces the node to do not move or realign on Z */
     pin(v?: boolean): void;
     localToScreen(x: number, y: number, graphCanvas: LGraphCanvas): Vector2;
@@ -1135,14 +1140,28 @@ export declare class LGraphGroup {
     private _bounding: Vector4;
     color: string;
     font: string;
+    size: Vector2;
+    pos: Vector2;
+    font_size: number;
+    flags: Record<string, boolean>;
+
+    get titleHeight(): number;
+    get selected(): boolean;
+
+    // Pinned group cannot be selected.
+    get pinned(): boolean;
+    pin(): void;
+    unpin(): void;
 
     configure(o: SerializedLGraphGroup): void;
     serialize(): SerializedLGraphGroup;
+    resize(width: number, height: number): void;
     move(deltaX: number, deltaY: number, ignoreNodes?: boolean): void;
     recomputeInsideNodes(): void;
     isPointInside: LGraphNode["isPointInside"];
     setDirtyCanvas: LGraphNode["setDirtyCanvas"];
     addNodes(nodes: LGraphNode[], padding?: number): void;
+    getMenuOptions(): ContextMenuItem[];
 }
 
 export declare class DragAndScale {
@@ -1470,6 +1489,13 @@ export declare class LGraphCanvas {
         selected: boolean,
         mouseOver: boolean
     ): void;
+    drawSelectionBounding(ctx: CanvasRenderingContext2D, area: Vector4, options?: {
+        shape?: SlotShape,
+        title_height?: number,
+        title_mode?: SlotTitleMode,
+        fgcolor?: string,
+        padding?: number,
+    }): void;
     /** draws every connection visible in the canvas */
     drawConnections(ctx: CanvasRenderingContext2D): void;
     /**
@@ -1539,7 +1565,16 @@ export declare class LGraphCanvas {
         callback: Function,
         event: any
     ): HTMLDivElement;
-    showSearchBox(event?: MouseEvent): void;
+    showSearchBox(event?: MouseEvent, options?: LinkReleaseContext): void;
+    showConnectionMenu(optPass?: {
+        nodeFrom?: LGraphNode;
+        slotFrom?: INodeSlot | string | number;
+        nodeTo?: LGraphNode;
+        slotTo?: INodeSlot | string | number;
+        e?: MouseEvent;
+        allow_searchbox?: boolean;
+        showSearchBox?: (event?: MouseEvent, options?: LinkReleaseContext) => void;
+    }): void;
     showEditPropertyValue(node: LGraphNode, property: any, options: any): void;
     createDialog(
         html: string,
