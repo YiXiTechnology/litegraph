@@ -5446,6 +5446,9 @@ const globalExport = {};
 
             this.viewport = options.viewport || null; //to constraint render area to a portion of the canvas
 
+            this.cpuText = ''; // yyh
+            this.memoryText = ''; // yyh
+            this.diskText = ''; // yyh
 
             //link canvas and graph
             if (graph) {
@@ -9218,7 +9221,7 @@ const globalExport = {};
              **/
         renderInfo(ctx, x, y) {
             x = x || 10;
-            y = y || this.canvas.offsetHeight - 80;
+            y = y || this.canvas.offsetHeight - 190; // yyh
 
             ctx.save();
             ctx.translate(x, y);
@@ -9232,6 +9235,9 @@ const globalExport = {};
                 ctx.fillText("N: " + this.graph._nodes.length + " [" + this.visible_nodes.length + "]", 5, 13 * 3);
                 ctx.fillText("V: " + this.graph._version, 5, 13 * 4);
                 ctx.fillText("FPS:" + this.fps.toFixed(2), 5, 13 * 5);
+                ctx.fillText("CPU:" + this.cpuText, 5, 13 * 6); // yyh
+                ctx.fillText("内存:" + this.memoryText, 5, 13 * 7); // yyh
+                ctx.fillText("磁盘:" + this.diskText, 5, 13 * 8); // yyh
             } else {
                 ctx.fillText("No graph selected", 5, 13 * 1);
             }
