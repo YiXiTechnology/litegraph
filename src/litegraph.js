@@ -9221,7 +9221,7 @@ const globalExport = {};
              **/
         renderInfo(ctx, x, y) {
             x = x || 10;
-            y = y || this.canvas.offsetHeight - 190; // yyh
+            y = y || this.canvas.offsetHeight - 80;
 
             ctx.save();
             ctx.translate(x, y);
@@ -9234,10 +9234,10 @@ const globalExport = {};
                 ctx.fillText("I: " + this.graph.iteration, 5, 13 * 2);
                 ctx.fillText("N: " + this.graph._nodes.length + " [" + this.visible_nodes.length + "]", 5, 13 * 3);
                 ctx.fillText("V: " + this.graph._version, 5, 13 * 4);
-                ctx.fillText("FPS:" + this.fps.toFixed(2), 5, 13 * 5);
-                ctx.fillText("CPU:" + this.cpuText, 5, 13 * 6); // yyh
-                ctx.fillText("内存:" + this.memoryText, 5, 13 * 7); // yyh
-                ctx.fillText("磁盘:" + this.diskText, 5, 13 * 8); // yyh
+                ctx.fillText("FPS: " + this.fps.toFixed(2), 5, 13 * 5);
+                ctx.fillText("CPU: " + this.cpuText, 5, 13 * 6); // yyh
+                ctx.fillText("内存: " + this.memoryText, 5, 13 * 7); // yyh
+                ctx.fillText("磁盘: " + this.diskText, 5, 13 * 8); // yyh
             } else {
                 ctx.fillText("No graph selected", 5, 13 * 1);
             }
