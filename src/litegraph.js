@@ -9221,7 +9221,7 @@ const globalExport = {};
              **/
         renderInfo(ctx, x, y) {
             x = x || 10;
-            y = y || this.canvas.offsetHeight - 80;
+            y = y || this.canvas.offsetHeight - 120;
 
             ctx.save();
             ctx.translate(x, y);
