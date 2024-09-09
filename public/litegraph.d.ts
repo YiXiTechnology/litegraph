@@ -1382,6 +1382,10 @@ export declare class LGraphCanvas {
 
     pointer_is_down?: boolean;
 
+    cpuText?: string; // yyh
+    memoryText?: string; // yyh
+    diskText?: string; // yyh
+
     /** clears all the data inside */
     clear(): void;
     /** assigns a graph, you can reassign graphs to the same canvas */
