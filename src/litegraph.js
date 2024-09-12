@@ -1,3 +1,5 @@
+import { BadgePosition } from "./LGraphBadge";
+
 const globalExport = {};
 
 (function (globalThis) {
@@ -2375,6 +2377,8 @@ const globalExport = {};
             this.inputs = [];
             this.outputs = [];
             this.connections = [];
+            this.badges = [];
+            this.badgePosition = BadgePosition.TopLeft;
 
             //local data
             this.properties = {}; //for the values
@@ -4814,6 +4818,27 @@ const globalExport = {};
                 (y + this.pos[1]) * graphcanvas.scale + graphcanvas.offset[1]
             ];
         }
+
+        get width() {
+            return this.size[0];
+        }
+
+        get height() {
+            return this.size[1];
+        }
+
+        drawBadges(ctx, {gap = 2} = {}) {
+            const badgeInstances = this.badges.map(badge => badge instanceof LGraphBadge ? badge : badge());
+            const isLeftAligned = this.badgePosition === BadgePosition.TopLeft;
+
+            let currentX = isLeftAligned ? 0 : this.width - badgeInstances.reduce((acc, badge) => acc + badge.getWidth(ctx) + gap, 0);
+            const y = - (LiteGraph.NODE_TITLE_HEIGHT + gap);
+
+            for (const badge of badgeInstances) {
+                badge.draw(ctx, currentX, y - badge.height);
+                currentX += badge.getWidth(ctx) + gap;
+            }
+        }
     }
 
     globalThis.LGraphNode = LiteGraph.LGraphNode = LGraphNode;
@@ -6148,7 +6173,6 @@ const globalExport = {};
             node.graph.afterChange( /*?*/);
         }
         static onMenuNodePin(value, options, e, menu, node) {
-            node.pin();
         }
         static onMenuNodeMode(value, options, e, menu, node) {
             new LiteGraph.ContextMenu(
@@ -9522,6 +9546,8 @@ const globalExport = {};
                 node.is_selected,
                 node.mouseOver
             );
+            node.drawBadges(ctx);
+
             ctx.shadowColor = "transparent";
 
             //draw foreground
@@ -13202,7 +13228,14 @@ const globalExport = {};
                 options.push(
                     {
                         content: node.pinned ? "Unpin" : "Pin",
-                        callback: LGraphCanvas.onMenuNodePin
+                        callback: (...args) => {
+                            LGraphCanvas.onMenuNodePin(...args);
+                            for (const i in this.selected_nodes) {
+                                const node = this.selected_nodes[i]
+                                node.pin()
+                            }
+                            this.setDirty(true, true);
+                        }
                     },
                     {
                         content: "Colors",
@@ -14446,3 +14479,4 @@ export const LGraphGroup = globalExport.LGraphGroup;
 export const DragAndScale = globalExport.DragAndScale;
 export const LGraphCanvas = globalExport.LGraphCanvas;
 export const ContextMenu = globalExport.ContextMenu;
+export { LGraphBadge, BadgePosition } from "./LGraphBadge";
