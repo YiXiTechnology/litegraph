@@ -435,6 +435,9 @@ export declare class LGraph {
     private _nodes_in_order: LGraphNode[];
     private _version: number;
 
+    get nodes(): LGraphNode[];
+    get groups(): LGraphGroup[];
+
     getSupportedTypes(): string[];
     /** Removes all nodes from this graph */
     clear(): void;
@@ -1153,6 +1156,7 @@ export declare class LGraphGroup {
     font_size: number;
     flags: Record<string, boolean>;
 
+    get nodes(): LGraphNode[];
     get titleHeight(): number;
     get selected(): boolean;
 
