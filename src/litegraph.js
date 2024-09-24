@@ -7065,16 +7065,24 @@ const globalExport = {};
 
                                         if (input.link !== null) {
                                             var link_info = this.graph.links[input.link]; //before disconnecting
+                                            const slot = link_info.origin_slot;
+                                            const linked_node = this.graph._nodes_by_id[link_info.origin_id];
                                             if (LiteGraph.click_do_break_link_to || (LiteGraph.ctrl_alt_click_do_break_link && e.ctrlKey && e.altKey && !e.shiftKey)) {
                                                 node.disconnectInput(i);
-                                            } else if (this.allow_reconnect_links ||
-                                                //this.move_destination_link_without_shift ||
-                                                e.shiftKey) {
+                                            } else if (e.shiftKey) {
+                                                this.connecting_links = [{
+                                                    node: linked_node,
+                                                    slot,
+                                                    output: linked_node.outputs[slot],
+                                                    pos: linked_node.getConnectionPos(false, slot),
+                                                }]
+
+                                                this.dirty_bgcanvas = true;
+                                                skip_action = true;
+                                            } else if (this.allow_reconnect_links) {
                                                 if (!LiteGraph.click_do_break_link_to) {
                                                     node.disconnectInput(i);
                                                 }
-                                                const linked_node = this.graph._nodes_by_id[link_info.origin_id];
-                                                const slot = link_info.origin_slot;
                                                 this.connecting_links = [
                                                     {
                                                         node: linked_node,
@@ -8289,7 +8297,30 @@ const globalExport = {};
                 JSON.stringify(clipboard_info)
             );
         }
-        pasteFromClipboard(isConnectUnselected = false) {
+
+        emitEvent(detail) {
+            this.canvas.dispatchEvent(new CustomEvent(
+                "litegraph:canvas",
+                {
+                    bubbles: true,
+                    detail
+                }
+            ));
+        }
+        
+        emitBeforeChange() {
+            this.emitEvent({
+                subType: "before-change",
+            })
+        }
+
+        emitAfterChange() {
+            this.emitEvent({
+                subType: "after-change",
+            })
+        }
+
+        _pasteFromClipboard(isConnectUnselected = false) {
             // if ctrl + shift + v is off, return when isConnectUnselected is true (shift is pressed) to maintain old behavior
             if (!LiteGraph.ctrl_shift_v_paste_connect_unselected_outputs && isConnectUnselected) {
                 return;
@@ -8363,6 +8394,15 @@ const globalExport = {};
             this.selectNodes(nodes);
 
             this.graph.afterChange();
+        }
+
+        pasteFromClipboard(isConnectUnselected = false) {
+            this.emitBeforeChange();
+            try {
+                this._pasteFromClipboard(isConnectUnselected);
+            } finally {
+                this.emitAfterChange();
+            }
         }
         /**
              * process a item drop event on top the canvas
