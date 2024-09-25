@@ -5118,7 +5118,7 @@ const globalExport = {};
         constructor(element, skip_events) {
             this.offset = new Float32Array([0, 0]);
             this.scale = 1;
-            this.max_scale = 3;
+            this.max_scale = 2;
             this.min_scale = 0.1;
             this.onredraw = null;
             this.enabled = true;
