@@ -5224,12 +5224,12 @@ export class LGraphCanvas {
         }
 
         //rendering the outline of the connection can be a little bit slow
-        if (this.render_connections_border &&
-            this.ds.scale > 0.6 &&
-            !skip_border) {
-            ctx.strokeStyle = "rgba(0,0,0,0.5)";
-            ctx.stroke(path);
-        }
+        // if (this.render_connections_border &&
+        //     this.ds.scale > 0.6 &&
+        //     !skip_border) {
+        //     ctx.strokeStyle = "rgba(0,0,0,0.5)";
+        //     ctx.stroke(path);
+        // }
 
         ctx.lineWidth = this.connections_width;
         ctx.fillStyle = ctx.strokeStyle = color;
